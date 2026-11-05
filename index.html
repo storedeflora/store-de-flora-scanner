@@ -1,0 +1,70 @@
+
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>STORE DE FLORA - Scanner</title>
+  <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+  <style>
+    body {
+      font-family: Arial;
+      text-align: center;
+      background: #fce4ec;
+      padding: 20px;
+    }
+    button {
+      padding: 15px 25px;
+      background: #d81b60;
+      color: white;
+      border: 0;
+      border-radius: 8px;
+      font-size: 17px;
+    }
+  </style>
+</head>
+<body>
+  <h2>STORE DE FLORA</h2>
+  <h3>Scanner un article</h3>
+  <div id="reader" style="max-width:400px;margin:auto;"></div>
+  <p id="message">Prêt à scanner</p>
+  <button onclick="demarrer()">Démarrer le scanner</button>
+
+  <script>
+    const URL_SCRIPT = "https://script.google.com/macros/s/AKfycbwJVcHCJjT6S91E98MVbBNKqrBHFATT7tzUYSF6fJqlDU7ToFA_kdVtTjJ_0VQOtiB-/exec";
+    const scanner = new Html5Qrcode("reader");
+    let actif = false;
+
+    async function demarrer() {
+      if (actif) return;
+      try {
+        actif = true;
+        document.getElementById("message").innerText = "Ouverture de la caméra...";
+        await scanner.start(
+          { facingMode: "environment" },
+          { fps: 10, qrbox: { width: 280, height: 140 } },
+          async function(reference) {
+            actif = false;
+            await scanner.stop();
+            document.getElementById("message").innerText =
+              "Référence détectée : " + reference;
+
+            fetch(URL_SCRIPT + "?ref=" + encodeURIComponent(reference), {
+              mode: "no-cors"
+            });
+
+            document.getElementById("message").innerText =
+              "Référence transmise : " + reference;
+          }
+        );
+        document.getElementById("message").innerText =
+          "Caméra activée. Présente une étiquette.";
+      } catch (erreur) {
+        actif = false;
+        document.getElementById("message").innerText =
+          "Erreur : " + erreur;
+      }
+    }
+  </script>
+</body>
+</html>
